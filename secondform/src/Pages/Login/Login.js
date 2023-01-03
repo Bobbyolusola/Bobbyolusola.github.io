@@ -4,6 +4,7 @@ import {useState} from "react";
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "../../firebase";
 import {AppRoutes} from "../../common/RoutePage/Routes";
+import {setFormData} from "../../Helpers/js-helpers";
 
 
 
@@ -22,15 +23,6 @@ const Login = () => {
         // return user;
     }
 
-    const setFormData = (value, key) => {
-        setFormValues((prevState)=>{
-            return{
-                ...prevState,
-                [key]: value,
-            }
-        });
-    };
-
     const handleLoginSubmit = async(e) => {
         e.preventDefault();
         await signIn();
@@ -48,14 +40,14 @@ const Login = () => {
                         <form onSubmit={handleLoginSubmit} >
                             <label>Email: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                 <input type='email' style={{width: '200px', height: '22px'}}
-                                       onChange={(e)=> setFormData(e.target.value, 'email')}/>
+                                       onChange={(e)=> setFormData(e.target.value, 'email', setFormValues)}/>
 
                             </label>
                             <br/><br/>
 
                             <label>Password: &nbsp;&nbsp;
                                 <input type='Password' style={{width: '200px', height: '22px'}}
-                                       onChange={(e)=> setFormData(e.target.value, 'password')}/>
+                                       onChange={(e)=> setFormData(e.target.value, 'password', setFormValues)}/>
                             </label>
                             <br/><br/>
                             <button type='submit'>Login</button>
