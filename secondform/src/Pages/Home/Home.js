@@ -1,6 +1,6 @@
 import {signOutUser} from "../../Helpers/js-helpers";
 import {useNavigate} from "react-router-dom";
-import styles from "../Register/Register.module.css";
+import styles from "../Home/Home.module.css";
 import {useEffect, useState} from "react";
 import {collection, addDoc, onSnapshot, doc, setDoc, deleteDoc} from "firebase/firestore";
 import db from "../../firebase"
@@ -10,6 +10,7 @@ const Home = () => {
     const [users, setUsers] = useState([]);
     const [editId, setEditID] = useState('');
     const [editFormValues, setEditFormValues] = useState({});
+    const [FormValues, setFormValues] = useState({});
 
     useEffect( ()=> {
         getMyProfileData()
@@ -46,8 +47,22 @@ const Home = () => {
         //     ...user,
         //     firstName: "joy",
         // })
-
         await setDoc(docRef, editFormValues)
+
+    }
+
+    const setFormData = (value, key) => {
+        setEditFormValues((prevState)=>{
+            return{
+                ...prevState,
+                [key]: value,
+            }
+        });
+    };
+
+    const handleSaveEdit = async(user) => {
+        await editUser(user);
+        setEditID('')
     }
 
 
@@ -56,7 +71,9 @@ const Home = () => {
             <div className={styles.mainBox}>
                 <div className={styles.main}>
                 <h1>Home</h1>
-                    <button onClick={handleAddUSer}>Add User</button>
+                    <button type='button' style={{ width: 150  }} onClick={()=>signOutUser(navigate)}> SignOut </button>
+                    <br/>
+                    <button type='button' onClick={handleAddUSer}>Add User</button>
                     {users && users.map((user) => ( // getting collection from firestore
                         editId !== user?.id
                             ? (<div key={user.id}>
@@ -65,19 +82,33 @@ const Home = () => {
                                 <p>{user?.dateOfBirth}</p>
                                 <p>{user?.role}</p>
                                 <button onClick={()=> handleDeleteUser(user?.id)}>Delete</button>
-                                <br/><br/>
+                                <br/>
                                 {/*<button onClick={()=> editUser(user)}>Edit</button> //Hard coded editUser*/}
                                 {/*Form coded editUser*/}
                                 <button onClick={()=> setEditID(user?.id)}>Edit</button>
+                                <br/>
                                </div>)
                             :
                                 (<div key={user.id}>
-                                    <input value={editFormValues?.firstName}/>
-                                    <input value={editFormValues?.role} />
-                                 </div>)
+                                    <input value={editFormValues?.firstName}
+                                           onChange={(e)=> setFormData(e.target.value, 'firstName')}
+                                    />
+                                    <br/>
+                                    <input value={editFormValues?.lastName}
+                                           onChange={(e)=> setFormData(e.target.value, 'lastName')}
+                                    />
+                                    <br/>
+                                    <input value={editFormValues?.dateOfBirth}
+                                           onChange={(e)=> setFormData(e.target.value, 'dateOfBirth')}
+                                    />
+                                    <br/>
+                                    <input value={editFormValues?.role}
+                                           onChange={(e)=> setFormData(e.target.value, 'role')}
+                                    />
+                                    <button type='button' onClick={()=>handleSaveEdit(user)}>Save Edit</button>
+                                </div>)
                     ))}
 
-            <button type='button' style={{ width: 150  }} onClick={()=>signOutUser(navigate)}> SignOut </button>
                 </div>
             </div>
         </div>
