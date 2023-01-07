@@ -3,7 +3,8 @@ import {useNavigate} from "react-router-dom";
 import styles from "../Home/Home.module.css";
 import {useEffect, useState} from "react";
 import {collection, addDoc, onSnapshot, doc, setDoc, deleteDoc} from "firebase/firestore";
-import db from "../../firebase"
+import {ref, uploadBytesResumable, getDownloadURL, getBlob, deleteObject} from "firebase/storage";
+import db, {storage} from "../../firebase"
 
 const Home = () => {
     const navigate = useNavigate();
@@ -38,17 +39,23 @@ const Home = () => {
         const collectionRef = collection(db, "profile");
         const docRef = await addDoc(collectionRef, {firstName: "Ihor", lastName: "Doctor", dateOfBirth: "12/04/1980", role: "Mentor"})
         docRef.id && console.log(docRef.id)
-        console.log(docRef)
+        console.log(docRef);
     }
 
-    const editUser = async (user) => {
-        const docRef = doc (db,"profile", user.id)
+    const editUser = async (id, newUser = editFormValues) => {
+        const docRef = doc(db,"profile", id)
         // await setDoc(docRef, { //Hard coded editUser
         //     ...user,
         //     firstName: "joy",
         // })
-        await setDoc(docRef, editFormValues)
+        console.log("editFormValues", newUser)
+        await setDoc(docRef, newUser);
+    }
 
+    const handleSaveEdit = async (id, newUser) => {
+        await editUser(id, newUser);
+        setEditID('');
+        setEditFormValues({});
     }
 
     const setFormData = (value, key) => {
@@ -60,20 +67,51 @@ const Home = () => {
         });
     };
 
-    const handleSaveEdit = async(user) => {
-        await editUser(user);
-        setEditID('')
+
+    const handleUpload = (e) => {
+        console.log(e.target.files[0])
+        const storageRef = ref(storage, `/photos/${e.target.files[0].name}`)
+        const uploadData = uploadBytesResumable(storageRef, e.target.files[0])
+
+        uploadData.on("state_changed",
+            (snapshot)=> {
+            const progress = ((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+            console.log(progress, "%");
+        },
+            (err)=> console.log(err),
+            ()=>{
+                getDownloadURL(uploadData.snapshot.ref)
+                    // .then(url => console.log(url))
+                    .then(url => setEditFormValues(prevState => {
+                        return{
+                            ...prevState,
+                            imageUrl: url,
+                            imageName: e.target.files[0].name
+                        }
+                    }))
+            }
+            )
     }
 
+    const handleDeleteImage = (user) => {
+        const imageRef = ref(storage, `photos/${user?.imageName}`);
+        deleteObject(imageRef).then(() => {
+            handleSaveEdit(user.id, {...editFormValues,
+                imageUrl: null,
+                imageName: null
+        })
+        }).catch((error) => {
+        });
+    }
 
     return(
         <div>
             <div className={styles.mainBox}>
                 <div className={styles.main}>
                 <h1>Home</h1>
-                    <button type='button' style={{ width: 150  }} onClick={()=>signOutUser(navigate)}> SignOut </button>
+                    <button  style={{ width: 150  }} onClick={()=>signOutUser(navigate)}> SignOut </button>
                     <br/>
-                    <button type='button' onClick={handleAddUSer}>Add User</button>
+                    <button  onClick={handleAddUSer}>Add User</button>
                     {users && users.map((user) => ( // getting collection from firestore
                         editId !== user?.id
                             ? (<div key={user.id}>
@@ -81,7 +119,21 @@ const Home = () => {
                                 <p>{user?.lastName}</p>
                                 <p>{user?.dateOfBirth}</p>
                                 <p>{user?.role}</p>
+
+                                {user?.imageUrl && <img src={user.imageUrl} alt=" " style={{width: "100px"}}/> }
+
                                 <button onClick={()=> handleDeleteUser(user?.id)}>Delete</button>
+                                <br/>
+                                <button onClick={ async ()=>{
+                                    const image = await getBlob(ref(storage, `photos/${user?.imageName}`), user?.imageUrl);
+                                    const csvURL = window.URL.createObjectURL(image);
+                                    const tempLink = document.createElement('a');
+                                    tempLink.href = csvURL;
+                                    tempLink.setAttribute('download', 'filename.jpeg');
+                                    tempLink.click();
+                                }}>Download Image</button>
+                                <br/>
+                                <button onClick={()=>handleDeleteImage(user)}>Delete Image</button>
                                 <br/>
                                 {/*<button onClick={()=> editUser(user)}>Edit</button> //Hard coded editUser*/}
                                 {/*Form coded editUser*/}
@@ -90,6 +142,10 @@ const Home = () => {
                                </div>)
                             :
                                 (<div key={user.id}>
+                                    {editFormValues?.imageUrl && <img src={editFormValues.imageUrl} alt=" " style={{width: "100px"}}/> }
+
+                                    <input type="file" onChange={handleUpload} />
+
                                     <input value={editFormValues?.firstName}
                                            onChange={(e)=> setFormData(e.target.value, 'firstName')}
                                     />
@@ -105,7 +161,7 @@ const Home = () => {
                                     <input value={editFormValues?.role}
                                            onChange={(e)=> setFormData(e.target.value, 'role')}
                                     />
-                                    <button type='button' onClick={()=>handleSaveEdit(user)}>Save Edit</button>
+                                    <button type='button' onClick={()=>handleSaveEdit(user.id)}>Save Edit</button>
                                 </div>)
                     ))}
 
