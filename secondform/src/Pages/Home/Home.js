@@ -95,8 +95,9 @@ const Home = () => {
 
     const handleDeleteImage = (user) => {
         const imageRef = ref(storage, `photos/${user?.imageName}`);
-        deleteObject(imageRef).then(() => {
-            handleSaveEdit(user.id, {...editFormValues,
+        deleteObject(imageRef).then((res) => {
+            console.log(res)
+            handleSaveEdit(user.id, {...user,
                 imageUrl: null,
                 imageName: null
         })
