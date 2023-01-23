@@ -7,14 +7,16 @@ const Header = () => {
     const [isHoveringReg, setIsHoveringReg] = useState(false);
     const handleMouseEnterReg = () => {
         setIsHoveringReg(true);
-    };const handleMouseLeaveReg = () => {
+    };
+    const handleMouseLeaveReg = () => {
         setIsHoveringReg(false);
     };
 
     const [isHoveringLog, setIsHoveringLog] = useState(false);
     const handleMouseEnterLog = () => {
         setIsHoveringLog(true);
-    };const handleMouseLeaveLog = () => {
+    };
+    const handleMouseLeaveLog = () => {
         setIsHoveringLog(false);
     };
 

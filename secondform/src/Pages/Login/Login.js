@@ -13,7 +13,7 @@ const Login = () => {
     const [formValues, setFormValues] = useState({
         email: '',
         password: '',
-    })
+    });
 
     const signIn = async () => {  //connecting with firebase and localhost
         await signInWithEmailAndPassword(auth, formValues.email, formValues.password)

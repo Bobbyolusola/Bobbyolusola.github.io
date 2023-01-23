@@ -24,7 +24,6 @@ const Register = () => {
             id: user.uid
         }))
         auth?.currentUser?.uid && navigate(AppRoutes.login)
-
     }
 
     const handleSubmit = (e)=> {
